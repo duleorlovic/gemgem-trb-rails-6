@@ -1,0 +1,8 @@
+New thing
+= @form.errors if @form.errors.present?
+= form_for @form do |f|
+  = f.text_field :name, placeholder: 'Name', readonly: @form.readonly?(:name)
+  = f.text_area :description, placeholder: 'Description'
+  = f.submit
+
+= link_to 'Index', things_path

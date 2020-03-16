@@ -1,0 +1,9 @@
+Index
+%ul
+  - Thing.all.each do |thing|
+    %li
+      %b= thing.name
+      = thing.description
+      = link_to 'Edit', edit_thing_path(thing)
+
+= link_to 'New', new_thing_path
