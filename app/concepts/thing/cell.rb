@@ -1,6 +1,8 @@
 class Thing::Cell < Cell::Concept
-  include ActionView::Helpers::DateHelper
-  include Rails::Timeago::Helper
+  include Gemgem::Cell::GridCell
+  self.classes = %w[columns large-3]
+
+  include Gemgem::Cell::CreatedAt
 
   property :name
   property :created_at
@@ -19,16 +21,6 @@ class Thing::Cell < Cell::Concept
   private
 
   def name_link
-    link_to name, edit_thing_path(model)
-  end
-
-  def created_at_ago
-    timeago_tag(created_at)
-  end
-
-  def classes
-    classes = %w[columns large-3]
-    classes << 'end' if options[:last] === model
-    classes
+    link_to name, thing_path(model)
   end
 end

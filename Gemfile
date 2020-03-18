@@ -62,3 +62,6 @@ gem 'cells-rails'
 gem 'rails-timeago'
 
 gem 'haml-rails'
+
+gem 'kaminari'
+gem 'kaminari-cells'

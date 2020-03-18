@@ -1,14 +1,40 @@
 class ThingsController < ApplicationController
   def index; end
 
+  def show
+    thing_operation = run Thing::Operation::Update
+    @thing = thing_operation[:model]
+
+    run Comment::Operation::Create # overrides @model and @form
+  end
+
+  def create_comment
+    thing_operation = run Thing::Operation::Update
+    @thing = thing_operation[:model]
+
+    run Comment::Operation::Create, params: params.merge(thing_id: params[:id]) do
+      flash[:notice] = "Created comment for \"#{@thing.name}\""
+      return redirect_to thing_path(@thing)
+    end
+
+    flash.now[:alert] = 'Error'
+    render :show
+  end
+
+  def next_comments
+    run Thing::Operation::Update
+
+    render js: concept('/comment/cell/grid', @model, page: params[:page]).(:append)
+  end
+
   def new
     run Thing::Operation::Create
   end
 
   def create
-    run Thing::Operation::Create do |_result|
+    run Thing::Operation::Create do |result|
       flash[:notice] = 'Successfully created'
-      return redirect_to things_path
+      return redirect_to thing_path(result[:model])
     end
 
     flash.now[:alert] = 'Error'
@@ -21,9 +47,9 @@ class ThingsController < ApplicationController
   end
 
   def update
-    run Thing::Operation::Update do |_result|
+    run Thing::Operation::Update do |result|
       flash[:notice] = 'Successfully updated'
-      return redirect_to things_path
+      return redirect_to thing_path(result[:model])
     end
 
     flash.now[:alert] = 'Error'

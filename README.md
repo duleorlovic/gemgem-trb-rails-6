@@ -400,3 +400,93 @@ use `Trailblazer::Cell` http://trailblazer.to/gems/cells/trailblazer.html
 (folder is `view` instead of `views`, class is inside subfolder, for example
 `cell/show.rb` so the name would be `Thing::Cell::Show`).
 
+## Chapter-05 Nested Forms
+
+Note that instead of hooks `setup_model!` we use `step :populate_associations`
+to populate association `ctx[:model].thing = ...` and also to generate nested
+model in static way (regardless of params) with `ctx[:model].build_user`. In
+this case we do not need populator in contract.
+```
+# app/concepts/comment/operation/create.rb
+module Comment::Operation
+  class Create < Trailblazer::Operation
+    step Model(Comment, :new)
+    step :populate_associations
+    step Contract::Build(constant: Comment::Contract::Create)
+    step Contract::Validate(key: :comment)
+    step Contract::Persist()
+
+    def populate_associations(ctx, params:, **)
+      ctx[:model].thing = Thing.find_by_id(params[:id])
+      ctx[:model].build_user
+    end
+  end
+end
+```
+Nested form is defined using block syntax
+```
+# app/concepts/comment/contract/create.rb
+module Comment::Contract
+  class Create < Reform::Form
+    def self.weights
+      { '0' => 'Nice!', '1' => 'Rubbish!' }
+    end
+
+    def weights
+      [self.class.weights.to_a, :first, :last]
+    end
+
+    property :body
+    property :weight, prepopulator: lambda { |*| self.weight == '0' }
+    property :thing
+
+    validates :body, length: { in: 6..160 }
+    validates :weight, inclusion: { in: weights.keys }
+    validates :thing, :user, presence: true
+
+    property :user do
+      # prepopulator: ->(*) { self.user = User.new },
+      # populate_if_empty: lambda { |*| User.new } do
+      property :email
+      validates :email, presence: true#, email: true
+    end
+  end
+end
+```
+In a view you can use `field_for`
+```
+# app/views/comments/new.html.haml
+= form_for [@thing, @form] do |f| # POST /things/1/comments/
+  %h3 What do you think?
+
+  = f.text_field :body, placeholder: 'Your comment'
+  = f.collection_radio_buttons :weight, *@form.weights
+
+  = f.fields_for :user do |ff|
+    = ff.text_field :email, placeholder: 'Your Email'
+
+  = f.button :submit, class: :expand
+```
+When writing tests you need to cover success case (no validation errors), error
+case for each validation and probably a case a lack of error message when params
+are valid for that field (for example nil is allowed).
+
+## Chapter-06 Composed Views
+
+When we show Comment form on Thing show page than what action should happen in
+case of comment validation errors ?
+One solution would be to use ajax for comment form and rerender form with errors
+or redirect in javascript. But here we will use UI Action. that is an action in
+ThingsController that will, in case of validation errors, show the Thing details
+and Comment form.
+
+Since running operation will override `@model` and `@form` we need to use
+different instance variables to hold `@thing` and `@comment` (we will keep using
+`@form` since there is only ony form, comment form).
+
+
+While including `gem 'kaminari-cells'` into Gemfile we need also to include `gem
+'kaminari'`.
+
+You can use https://github.com/trailblazer/trailblazer-cells to organize cells.
+

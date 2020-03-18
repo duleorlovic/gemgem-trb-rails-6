@@ -1,0 +1,27 @@
+%h3
+  Show
+
+%strong
+  #{@thing.name}
+  = link_to 'Edit', edit_thing_path(@thing)
+
+%p
+  #{@thing.description}
+
+= @form.errors.messages if @form.errors.present?
+= form_for @form, url: create_comment_thing_path(@thing) do |f|
+  = f.text_field :body, placeholder: 'Your comment'
+  = f.collection_radio_buttons :weight, *@form.weights
+
+  = f.fields_for :user do |ff|
+    = ff.text_field :email, placeholder: 'Your Email'
+
+  = f.button 'Create Comment'
+
+%h3 #{@thing.comments.size} comments
+
+= concept 'comment/cell/grid', @thing, page: params[:page]
+
+%div
+  = link_to 'New', new_thing_path
+  = link_to 'Index', things_path

@@ -1,0 +1,15 @@
+.header
+  %h1
+    - ##{@thing.name}
+
+= @form.errors.messages if @form.errors.present?
+= form_for [@thing, @form] do |f| # POST /things/1/comments/
+  %h3 What do you think?
+
+  = f.text_field :body, placeholder: 'Your comment'
+  = f.collection_radio_buttons :weight, *@form.weights
+
+  = f.fields_for :user do |ff|
+    = ff.text_field :email, placeholder: 'Your Email'
+
+  = f.button :submit, class: :expand
