@@ -18,4 +18,13 @@ class ThingsTest < ApplicationSystemTestCase
     assert_selector '#notice', text: 'Successfully updated'
     assert_match /My Desc/, page.body
   end
+
+  test 'cell' do
+    Thing.delete_all
+    Thing::Operation::Create.(params: {thing: {name: 'First'}})
+    Thing::Operation::Create.(params: {thing: {name: 'Last'}})
+    visit things_path
+    assert_selector '.columns', text: 'Last'
+    assert_selector '.columns.end', text: 'First'
+  end
 end

@@ -1,4 +1,5 @@
-New thing
+%h3 New thing
+
 = @form.errors if @form.errors.present?
 = form_for @form do |f|
   = f.text_field :name, placeholder: 'Name', readonly: @form.readonly?(:name)

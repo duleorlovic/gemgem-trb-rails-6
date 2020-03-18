@@ -56,4 +56,9 @@ gem 'tzinfo-data', platforms: %i[mingw mswin x64_mingw jruby]
 gem 'reform-rails'
 gem 'trailblazer-rails' # this will include trailblazer-loader
 
+gem 'cells-hamlit'
+gem 'cells-rails'
+
+gem 'rails-timeago'
+
 gem 'haml-rails'

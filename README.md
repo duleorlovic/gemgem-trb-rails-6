@@ -336,3 +336,67 @@ disable input field. We will test that field is disabled in system test
      assert_match /My Desc/, page.body
 ```
 
+## Chapter-04 Rails views and Encapsulation
+
+Cells gem https://github.com/trailblazer/cells is like a widget which has input
+(like current page in paginated list) so we know that is it's interface.
+In view it is used like
+```
+<%= concept('thing/cell', Thing.last) %>
+# which is translated to `Thing::Cell.new(Thing.last).show`.
+# but we need parent_controller
+```
+Cell is an object that contains all methods that are used in view. We can define
+`show` method (it is defined by default and it calls `render` so we can skip
+it).
+```
+# app/concepts/thing/cell.rb
+class Thing::Cell < Cell::Concept
+  def show
+    render
+  end
+end
+```
+`render` will look for the `app/concepts/thing/views/show.haml`, parse and
+return html string.
+
+Different UI formats are handled with different cells.
+Inside template every method is a method on cell instance. Inside methods we
+have access to `model` and `options`.
+Also inside cell you can access Rails view helpers like
+`link_to`. Also, you can use properties on model to save typing instead of
+`model.name` you can use `name`.
+To render collection you can use
+```
+<%= concept('thing/cell', collection: Thing.all, last: Thing.all) %>
+```
+
+To test we will can use system test
+```
+# test/system/things_test.rb
+require 'application_system_test_case'
+
+class ThingsTest < ApplicationSystemTestCase
+  test 'cell' do
+    Thing::Operation::Create.(params: { thing: { name: 'My Name' }})
+    Thing::Operation::Create.(params: { thing: { name: 'Your Name' }})
+    visit things_path
+    assert_selector '.columns', text: 'My Name'
+    assert_selector '.columns.end', text: 'Your Name'
+  end
+end
+```
+or `Cell::TestCase` which on Rails 6.0.2 needs to use
+::ActionDispatch::TestRequest.create
+https://github.com/trailblazer/cells-rails/issues/57
+TODO: Add integration test
+```
+
+```
+
+TODO: Switch to new gem version
+Instead of `Cell::Concept` (cells version 4.1.7) now (cells version 5) we should
+use `Trailblazer::Cell` http://trailblazer.to/gems/cells/trailblazer.html
+(folder is `view` instead of `views`, class is inside subfolder, for example
+`cell/show.rb` so the name would be `Thing::Cell::Show`).
+
