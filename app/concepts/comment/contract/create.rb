@@ -1,7 +1,7 @@
 module Comment::Contract
   class Create < Reform::Form
     def self.weights
-      { '0' => 'Nice!', '1' => 'Rubbish!' }
+      {'0' => 'Nice!', '1' => 'Rubbish!'}
     end
 
     def weights
@@ -12,15 +12,19 @@ module Comment::Contract
     property :weight, prepopulator: -> { self.weight = '0' }
     property :thing
 
-    validates :body, length: { in: 6..160 }
-    validates :weight, inclusion: { in: weights.keys }
+    validates :body, length: {in: 6..160}
+    validates :weight, inclusion: {in: weights.keys}
     validates :thing, :user, presence: true
 
-    property :user do
-      # prepopulator: ->(*) { self.user = User.new },
-      # populate_if_empty: lambda { |*| User.new } do
+    property :user,
+             prepopulator: ->(*) { self.user = User.new },
+             populator: :populate_user! do
       property :email
       validates :email, presence: true # email: true
+    end
+
+    def populate_user!(fragment:, **)
+      self.user = User.find_by(email: fragment['email']) || User.new
     end
   end
 end

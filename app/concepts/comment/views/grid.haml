@@ -1,7 +1,8 @@
-= concept('comment/cell', collection: comments, last: comments.last)
+.comments
+  = concept('comment/cell', collection: comments, last: comments.last)
 
-- unless comments.last_page?
-  #next
-    = link_to 'More', |
-      next_comments_thing_path(thing_id: @thing, page: comments.next_page), |
-      remote: true
+  - if !comments.total_pages.zero? && !comments.last_page?
+    #next
+      = link_to 'More', |
+        next_comments_thing_path(id: model, page: comments.next_page), |
+        remote: true

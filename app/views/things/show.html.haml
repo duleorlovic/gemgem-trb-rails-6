@@ -1,12 +1,21 @@
 %h3
   Show
 
+= concept('thing/cell/decorator', @thing).(:thumb)
+
 %strong
   #{@thing.name}
   = link_to 'Edit', edit_thing_path(@thing)
 
 %p
   #{@thing.description}
+
+%fieldset
+  %legend Users
+  - @thing.users.each do |user|
+    .row
+      = user.email
+
 
 = @form.errors.messages if @form.errors.present?
 = form_for @form, url: create_comment_thing_path(@thing) do |f|

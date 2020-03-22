@@ -65,3 +65,9 @@ gem 'haml-rails'
 
 gem 'kaminari'
 gem 'kaminari-cells'
+
+gem 'file_validators'
+gem 'paperdragon'
+
+gem 'rails_warden'
+gem 'tyrant'

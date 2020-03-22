@@ -13,8 +13,12 @@
   </head>
 
   <body>
-    <span id='notice'><%= flash[:notice] %></span>
-    <span id='alert'><%= flash[:alert] %></span>
+    <header>
+      <%= render 'layouts/navigation' %>
+    </header>
+    <main role='main'>
+      <%= render 'layouts/messages' %>
+    </main>
     <%= yield %>
   </body>
 </html>

@@ -1,5 +1,10 @@
 class Thing < ApplicationRecord
-  scope :latest, -> { all.limit(9).order(id: :desc) }
+  serialize :image_meta_data
 
-  has_many :comments, dependent: :destroy
+  has_many :authorships
+  has_many :users, through: :authorships
+
+  has_many :comments, -> { order(created_at: :desc) }, dependent: :destroy
+
+  scope :latest, -> { all.limit(9).order(id: :desc) }
 end

@@ -1,0 +1,4 @@
+= form_for @form, url: sessions_sign_in_path, html: { id: 'new_session' } do |f|
+  = f.text_field :email, placeholder: 'Email'
+  = f.text_field :password, placeholder: 'Password'
+  = f.submit 'Sign in'

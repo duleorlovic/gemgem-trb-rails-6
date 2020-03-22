@@ -1,57 +1,63 @@
 require 'test_helper'
 
 class CommentCellTest < Cell::TestCase
-  # https://github.com/trailblazer/cells-rails/issues/57
-  # controller ThingsController
+  controller ThingsController
 
-  # let(:thing) { Thing::Create.(thing: { name: 'Rails' }).model }
+  test 'show' do
+    thing = Thing::Operation::Create.(params: {thing: {name: 'Rails'}})[:model]
+    result = Comment::Operation::Create.(params: {comment: {body: 'Excellent', weight: '0', user: {email: 'zavan@trb.org'}}, thing_id: thing.id})
+    assert result.success?
+    result = Comment::Operation::Create.(params: {comment: {body: '!Well.', weight: '1', user: {email: 'jonny@trb.org'}}, thing_id: thing.id})
+    assert result.success?
+    result = Comment::Operation::Create.(params: {comment: {body: 'Cool stuff!', weight: '0', user: {email: 'chris@trb.org'}}, thing_id: thing.id})
+    assert result.success?
+    result = Comment::Operation::Create.(params: {comment: {body: 'Improving.', weight: '1', user: {email: 'hilz@trb.org'}}, thing_id: thing.id})
+    assert result.success?
 
-  # before do
-  #   Comment::Create.(comment: { body: 'Excellent', weight: '0', user: { email: 'zavan@trb.org' } }, thing_id: thing.id)
-  #   Comment::Create.(comment: { body: '!Well.', weight: '1', user: { email: 'jonny@trb.org' } }, thing_id: thing.id)
-  #   Comment::Create.(comment: { body: 'Cool stuff!', weight: '0', user: { email: 'chris@trb.org' } }, thing_id: thing.id)
-  #   Comment::Create.(comment: { body: 'Improving.', weight: '1', user: { email: 'hilz@trb.org' } }, thing_id: thing.id)
-  # end
+    html = concept('comment/cell/grid', thing).to_s
 
-  # # the comment grid.
-  # # .(:show)
-  # it do
-  #   html = concept('comment/cell/grid', thing).(:show)
+    comments = html.all(:css, '.comment')
+    assert_equal 3, comments.size
 
-  #   comments = html.all(:css, '.comment')
-  #   comments.size.must_equal 3
+    first = comments[0]
+    assert first.find('.header').has_content? 'hilz@trb.org'
+    assert first.find('.header time')['datetime'].match? /\d\d-/
+    assert first.has_content? 'Improving'
+    refute first.has_selector? '.fi-heart'
+    refute first[:class].match? /\send/
 
-  #   first = comments[0]
-  #   puts first.find('.header').class
-  #   first.find('.header').must_have_content 'hilz@trb.org'
-  #   first.find('.header time')['datetime'].must_match /\d\d-/
-  #   first.must_have_content 'Improving'
-  #   first.wont_have_selector('.fi-heart')
-  #   first[:class].wont_match /\send/
+    second = comments[1]
+    assert second.find('.header').has_content? 'chris@trb.org'
+    assert second.find('.header time')['datetime'].match? /\d\d-/
+    assert second.has_content? 'Cool stuff!'
+    assert second.has_selector?  '.fi-heart'
+    refute second[:class].match? /\send/
 
-  #   second = comments[1]
-  #   second.find('.header').must_have_content 'chris@trb.org'
-  #   second.find('.header time')['datetime'].must_match /\d\d-/
-  #   second.must_have_content 'Cool stuff!'
-  #   second.must_have_selector('.fi-heart')
-  #   second[:class].wont_match /\send/
+    third = comments[2]
+    assert third.find('.header').has_content? 'jonny@trb.org'
+    assert third.find('.header time')['datetime'].match? /\d\d-/
+    assert third.has_content? '!Well.'
+    refute third.has_selector? '.fi-heart'
+    assert third[:class].match? /\send/ # last grid item.
 
-  #   third = comments[2]
-  #   third.find('.header').must_have_content 'jonny@trb.org'
-  #   third.find('.header time')['datetime'].must_match /\d\d-/
-  #   third.must_have_content '!Well.'
-  #   third.wont_have_selector('.fi-heart')
-  #   third[:class].must_match /\send/ # last grid item.
+    # 'More!'
+    assert_equal "/things/#{thing.id}/next_comments?page=2", html.find('#next a')['href']
+  end
 
-  #   # 'More!'
-  #   html.find('#next a')['href'].must_equal "/things/#{thing.id}/next_comments?page=2"
-  # end
+  test 'append page 2' do
+    thing = Thing::Operation::Create.(params: {thing: {name: 'Rails'}})[:model]
+    result = Comment::Operation::Create.(params: {comment: {body: 'Excellent', weight: '0', user: {email: 'zavan@trb.org'}}, thing_id: thing.id})
+    assert result.success?
+    result = Comment::Operation::Create.(params: {comment: {body: '!Well.', weight: '1', user: {email: 'jonny@trb.org'}}, thing_id: thing.id})
+    assert result.success?
+    result = Comment::Operation::Create.(params: {comment: {body: 'Cool stuff!', weight: '0', user: {email: 'chris@trb.org'}}, thing_id: thing.id})
+    assert result.success?
+    result = Comment::Operation::Create.(params: {comment: {body: 'Improving.', weight: '1', user: {email: 'hilz@trb.org'}}, thing_id: thing.id})
+    assert result.success?
 
-  # # .(:append)
-  # it do
-  #   html = concept('comment/cell/grid', thing, page: 2).(:append)
+    html = concept('comment/cell/grid', thing, page: 2).(:append)
 
-  #   html.to_s.must_match /replaceWith/
-  #   html.to_s.must_match /zavan@trb.org/
-  # end
+    assert_match /outerHTML/, html.to_s
+    assert_match /zavan@trb.org/, html.to_s
+  end
 end

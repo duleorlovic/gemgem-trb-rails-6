@@ -29,6 +29,7 @@ class ThingsController < ApplicationController
 
   def new
     run Thing::Operation::Create
+    @form.prepopulate!
   end
 
   def create
@@ -43,6 +44,7 @@ class ThingsController < ApplicationController
 
   def edit
     run Thing::Operation::Update
+    @form.prepopulate!
     render action: :new
   end
 

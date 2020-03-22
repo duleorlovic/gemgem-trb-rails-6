@@ -490,3 +490,104 @@ While including `gem 'kaminari-cells'` into Gemfile we need also to include `gem
 
 You can use https://github.com/trailblazer/trailblazer-cells to organize cells.
 
+## Chapter-07 Mastering Forms
+
+Keep note that while writing tests nested params should have string as keys (not
+symbols). For example `params: { thing: { name: 'Name', users: [ { 'email' =>
+'my@email.com' } ] } }` (also no need to have `_attributes` suffix).
+
+If you notice error `Routing Error No route matches [POST]` in Firefox please
+try hard refresh https://github.com/rails/rails/issues/37864
+
+## Chapter-08 Callbacks
+
+I have not found callbacks in trb 2.1 so I will skip hooks and use steps in
+operations.
+
+To enable caching we need to include
+```
+# app/concepts/thing/cell.rb
+class Thing::Cell < Cell::Concept
+  include Cell::Caching::Notifications
+
+  class Grid < Cell::Concept
+    cache :show
+  end
+end
+```
+
+I got error
+
+```
+ActionView::Template::Error (can't dump IO):
+    1: %h3 Index
+    2: .row
+    3:   = concept('thing/cell/grid')
+    4:
+    5: = link_to 'New', new_thing_path
+
+app/views/things/index.html.haml:4
+```
+
+so one solution is to use `.to_s`
+```
+# app/concepts/thing/cell.rb
+class Thing::Cell < Cell::Concept
+  include Cell::Caching::Notifications
+
+  class Grid < Cell::Concept
+    cache :show
+
+    def show
+      things = Thing.latest
+      concept('thing/cell', collection: things, last: things.last).to_s
+    end
+  end
+end
+```
+We can extract cache to `CacheVersion` model so we can expire it in opration.
+
+
+While using paperdragon if you notice error
+```
+undefined method `width'
+```
+you need to add initializer
+https://github.com/apotonick/paperdragon/wiki/Troubleshooting
+```
+# config/initializers/dragonfly.rb
+Dragonfly.app.configure do
+  plugin :imagemagick
+
+  datastore :file,
+            server_root: 'public',
+            root_path: 'public/images'
+end
+```
+
+## Chapter-09 Authentication
+
+If you want to share code between operations you can use another operation
+```
+# app/concepts/session/operation/unconfirmed_no_password.rb
+module Session::Operation
+  class UnconfirmedNoPassword < Trailblazer::Operation
+    step :mark_user_as_confirmable
+
+    def mark_user_as_confirmable(ctx, **)
+      auth = Tyrant::Authenticatable.new(ctx[:params][:user])
+      auth.confirmable!
+      auth.sync
+    end
+  end
+end
+```
+
+and call it from other operation steps
+
+```
+step :sign_up_sleeping!
+def sign_up_sleeping!(ctx, **)
+  Session::Operation::UnconfirmedNoPassword.(params: {user: ctx['contract.default'].user.model})
+end
+```

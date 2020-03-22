@@ -1,9 +1,24 @@
 %h3 New thing
 
+-# = form_for Thing.last do |f|
+-#   = f.text_field :name
+-#   = f.submit
 = @form.errors if @form.errors.present?
 = form_for @form do |f|
   = f.text_field :name, placeholder: 'Name', readonly: @form.readonly?(:name)
   = f.text_area :description, placeholder: 'Description'
-  = f.submit
+  = f.file_field :file
+  %fieldset
+    %legend Do you know any authors?
+    = f.fields_for :users do |ff|
+      .row
+        = ff.text_field :email, readonly: ff.object.removeable?, 'data-test': 'email'
+
+        - if ff.object.removeable?
+          = ff.check_box :remove
+
+  = f.button 'Submit', class: :expand
+
+= @form.errors.messages
 
 = link_to 'Index', things_path

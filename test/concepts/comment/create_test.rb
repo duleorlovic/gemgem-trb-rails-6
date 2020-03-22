@@ -2,7 +2,7 @@ require 'test_helper'
 
 class CommentOperationCreateTest < ActiveSupport::TestCase
   test 'persist' do
-    thing = Thing::Operation::Create.(params: { thing: { name: 'Ruby' }})[:model]
+    thing = Thing::Operation::Create.(params: {thing: {name: 'Ruby'}})[:model]
 
     result = Comment::Operation::Create.(
       params: {
@@ -13,7 +13,7 @@ class CommentOperationCreateTest < ActiveSupport::TestCase
             email: 'jonny@trb.org',
           },
         },
-        id: thing.id,
+        thing_id: thing.id,
       }
     )
 
@@ -31,7 +31,7 @@ class CommentOperationCreateTest < ActiveSupport::TestCase
   end
 
   test 'invalid because of presence' do
-    result = Comment::Operation::Create.(params: { comment: {}})
+    result = Comment::Operation::Create.(params: {comment: {}})
     form = result['contract.default']
 
     refute result.success?
@@ -45,18 +45,18 @@ class CommentOperationCreateTest < ActiveSupport::TestCase
   end
 
   test 'invalid because of body length and weight inclusion' do
-    thing = Thing::Operation::Create.(params: { thing: { name: 'Ruby' }})[:model]
+    thing = Thing::Operation::Create.(params: {thing: {name: 'Ruby'}})[:model]
 
     result = Comment::Operation::Create.(
       params: {
         comment: {
-          body: 'a'*161,
+          body: 'a' * 161,
           weight: 'a',
           user: {
             email: 'jonny@trb.org',
           },
         },
-        id: thing.id,
+        thing_id: thing.id,
       }
     )
     form = result['contract.default']
@@ -67,5 +67,16 @@ class CommentOperationCreateTest < ActiveSupport::TestCase
       weight: ['is not included in the list'],
     }
     assert_equal errors, form.errors.messages
+  end
+
+  test 'use existing user find by email' do
+    thing = Thing::Operation::Create.(params: {thing: {name: 'Ruby'}})[:model]
+
+    result1 = Comment::Operation::Create.(params: {comment: {body: 'Fantastic!', weight: '1', 'user' => {'email' => 'jonny@trb.org',},}, thing_id: thing.id,})
+    result2 = Comment::Operation::Create.(params: {comment: {body: 'Fantastic!', weight: '1', 'user' => {'email' => 'jonny@trb.org',},}, thing_id: thing.id,})
+
+    assert result1.success?
+    assert result2.success?
+    assert_equal result1[:model].user.id, result2[:model].user.id
   end
 end
